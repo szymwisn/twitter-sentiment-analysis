@@ -9,6 +9,7 @@ import scrapy
 class Tweet(scrapy.Item):
     author_name = scrapy.Field()
     author_id = scrapy.Field()
+    sentiment = scrapy.Field()
     date = scrapy.Field()
     emails = scrapy.Field()
     hashtags = scrapy.Field()

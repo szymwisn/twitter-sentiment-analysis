@@ -1,3 +1,4 @@
+from functools import partial
 import scrapy
 import langdetect
 import logging
@@ -33,18 +34,16 @@ class TwitterSpider(scrapy.Spider):
         self.driver = webdriver.Chrome(driver_path, options=options)
 
     def start_requests(self):
-        tweet_hrefs = self.collect_unique_tweet_hrefs()
-        logging.info('No. of unique tweets found: ' + str(len(tweet_hrefs)))
-
-        tweet_requests = self.collect_tweet_requests(tweet_hrefs)
+        unique_tweets_hrefs = self.collect_unique_tweet_hrefs_dict()
+        tweet_requests = self.collect_tweet_requests(unique_tweets_hrefs)
 
         for tweet_request in tweet_requests:
             yield tweet_request
 
-    def collect_unique_tweet_hrefs(self):
-        unique_tweet_hrefs = set()
+    def collect_unique_tweet_hrefs_dict(self):
+        unique_tweet_hrefs_dict = dict()
 
-        for category, hashtags in hashtags_dict.items():
+        for sentiment, hashtags in hashtags_dict.items():
             for hashtag in hashtags:
                 url = TWITTER_HASHTAG + hashtag
                 logging.info('Processing a hashtag with url: ' + url)
@@ -60,12 +59,16 @@ class TwitterSpider(scrapy.Spider):
 
                     tweet_hrefs = self.extract_tweet_hrefs(response)
 
+                    unique_tweet_hrefs = set()
+
                     for tweet_href in tweet_hrefs:
                         unique_tweet_hrefs.add(tweet_href)
 
+                    unique_tweet_hrefs_dict[sentiment] = unique_tweet_hrefs
+
         self.driver.quit()
 
-        return unique_tweet_hrefs
+        return unique_tweet_hrefs_dict
 
     def scroll_down(self):
         self.driver.execute_script(SCROLL_DOWN_SCRIPT)
@@ -77,12 +80,16 @@ class TwitterSpider(scrapy.Spider):
         logging.info('No. of tweets found: ' + str(len(hrefs)))
         return hrefs
 
-    def collect_tweet_requests(self, tweet_hrefs):
-        for tweet_href in tweet_hrefs:
-            tweet_url = TWITTER_URL + tweet_href
-            yield scrapy.Request(tweet_url, callback=self.parse_tweet)
+    def collect_tweet_requests(self, unique_tweet_hrefs_dict):
+        for sentiment, tweet_hrefs in unique_tweet_hrefs_dict.items():
+            for tweet_href in tweet_hrefs:
+                tweet_url = TWITTER_URL + tweet_href
+                yield scrapy.Request(
+                    tweet_url,
+                    callback=partial(self.parse_tweet, sentiment)
+                )
 
-    def parse_tweet(self, response):
+    def parse_tweet(self, sentiment, response):
         data = response.xpath(ARTICLE_XPATH + '//text()').getall()
 
         tweet = Tweet()
@@ -140,6 +147,7 @@ class TwitterSpider(scrapy.Spider):
         text = replace_emails(text)
 
         tweet['text'] = text
+        tweet['sentiment'] = sentiment
 
         logging.info(tweet)
 
