@@ -12,6 +12,13 @@ BOT_NAME = 'twitter_sentiment_analysis'
 SPIDER_MODULES = ['twitter_sentiment_analysis.spiders']
 NEWSPIDER_MODULE = 'twitter_sentiment_analysis.spiders'
 
+CHROME_DRIVER_PATH = 'twitter_sentiment_analysis/chromedriver'
+
+INITIAL_DELAY_IN_SEC = 5
+SCROLL_DOWN_INTERVAL_IN_SEC = 3
+SCROLL_DOWN_COUNT = 20
+
+WEB_DRIVER_OPTIONS = ['--enable-javascript']
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html',

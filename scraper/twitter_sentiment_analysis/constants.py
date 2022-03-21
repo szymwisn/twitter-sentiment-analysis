@@ -5,3 +5,5 @@ TWITTER_HASHTAG = 'https://twitter.com/hashtag/'
 
 ARTICLE_XPATH = '//article[@data-testid="tweet"]'
 HREF_XPATH = '//a[@dir="auto"]/@href'
+
+SCROLL_DOWN_SCRIPT = 'window.scrollTo(0, document.body.scrollHeight)'
