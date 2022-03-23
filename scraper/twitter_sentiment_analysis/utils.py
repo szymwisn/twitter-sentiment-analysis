@@ -23,12 +23,12 @@ def find_hashtags(text):
 
 
 def replace_emails(text):
-    return re.sub(EMAIL_PATTERN, ' #EMAIL', text)
+    return re.sub(EMAIL_PATTERN, ' mail@mail.com', text)
 
 
 def replace_mentions(text):
-    return re.sub(MENTION_PATTERN, ' #MENTION', text)
+    return re.sub(MENTION_PATTERN, ' @mention', text)
 
 
 def replace_hashtags(text):
-    return re.sub(HASHTAG_PATTERN, ' #HASHTAG', text)
+    return re.sub(HASHTAG_PATTERN, ' #hashtag', text)
