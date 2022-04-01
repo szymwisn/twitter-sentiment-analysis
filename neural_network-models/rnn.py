@@ -36,7 +36,6 @@ lstm_out = 196
 # rnn 
 model = Sequential()
 model.add(Embedding(max_fatures, embed_dim, input_length = X.shape[1]))
-model.add(LSTM(lstm_out, dropout=0.2, return_sequences=True))
 model.add(LSTM(lstm_out, dropout=0.2))
 model.add(Dense(3, activation='softmax'))
 model.compile(loss = 'categorical_crossentropy', optimizer='adam',metrics = ['accuracy'])
