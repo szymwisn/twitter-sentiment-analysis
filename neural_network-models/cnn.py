@@ -3,12 +3,61 @@ import numpy as np
 
 
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
+
+from keras.wrappers.scikit_learn import KerasClassifier
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential
-from keras.layers import Dense, Embedding, LSTM, GlobalMaxPooling1D, Conv1D, BatchNormalization, Dropout
-from sklearn.model_selection import train_test_split
-from keras.utils.np_utils import to_categorical
+from keras.layers import Dense, Embedding, GlobalMaxPooling1D, Conv1D, BatchNormalization, Dropout
+
+
+
+
+def create_model(optimizer='adam', loss='categorical_crossentropy'):
+    # cnn
+    embed_dim = 128
+    f_conv_size = 1024
+    f_dense_size = 2048
+    out_dim = 3
+
+    model = Sequential()
+    model.add(Embedding(max_fatures, embed_dim, input_length = X.shape[1]))
+    model.add(Conv1D(f_conv_size, 3, padding='valid', activation='relu', strides=1))
+    model.add(GlobalMaxPooling1D())
+    model.add(Dropout(0.5))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(f_dense_size, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
+    model.add(Dense(out_dim, activation='softmax'))
+    model.compile(loss = loss, optimizer=optimizer, metrics = ['accuracy'])
+    model.summary()
+
+    return model
+
+def find_cnn_model_params(X_train, X_test, Y_train, Y_test):
+    model = KerasClassifier(build_fn=create_model)
+
+    param_grid = {
+        'epochs': [5, 10, 20],
+        'batch_size': [8, 16, 32, 64],
+        'optimizer': ['rmsprop', 'adam', 'SGD'],
+    }
+
+    grid = GridSearchCV(estimator=model, param_grid=param_grid,
+                        cv=KFold(n_splits=5, random_state=1410, shuffle=True),
+                        n_jobs=-1, return_train_score=True)
+    grid_result = grid.fit(X_train, Y_train, validation_data=(X_test, Y_test))
+
+    df = pd.DataFrame(grid_result.cv_results_).sort_values('mean_test_score', ascending=False)
+    
+    
+    with open("params_sorted_by_mean_cnn_model.txt", "a") as file:
+        file.write(df.to_string())
+        file.write("\n")
 
 
 
@@ -23,44 +72,25 @@ tokenizer.fit_on_texts(X)
 X = tokenizer.texts_to_sequences(X)
 X = pad_sequences(X)
 
-
-X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.33, random_state = 42)
+X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random_state = 42)
 print(X_train.shape,Y_train.shape)
 print(X_test.shape,Y_test.shape)
 
+find_cnn_model_params(X_train, X_test, Y_train, Y_test)
 
 
-embed_dim = 128
-
-# cnn
-
-model = Sequential()
-model.add(Embedding(max_fatures, embed_dim, input_length = X.shape[1]))
-model.add(Conv1D(1024, 3, padding='valid', activation='relu', strides=1))
-model.add(GlobalMaxPooling1D())
-model.add(Dropout(0.5))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(2048, activation='relu'))
-model.add(Dropout(0.5))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(3, activation='softmax'))
-model.compile(loss = 'categorical_crossentropy', optimizer='adam',metrics = ['accuracy'])
-model.summary()
 
 
-epochs = 10
+epochs_nb = 10
 batch_size = 32
+model = create_model()
 
 history = model.fit(X_train, Y_train, validation_data=(X_test, Y_test), batch_size=batch_size,
-                        epochs=epochs)
+                        epochs=epochs_nb)
 
-validation_size = 1000
-
-X_validate = X_test[-validation_size:]
-Y_validate = Y_test[-validation_size:]
-X_test = X_test[:-validation_size]
-Y_test = Y_test[:-validation_size]
 results = model.evaluate(X_test, Y_test, batch_size=batch_size)
 print("test loss, test acc:", results)
+
+
+with open("cnn_results.txt", "a") as file:
+        file.write(str(results))
