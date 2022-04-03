@@ -43,7 +43,7 @@ def find_cnn_model_params(X_train, X_test, Y_train, Y_test):
 
     param_grid = {
         'epochs': [5, 10, 20],
-        'batch_size': [8, 16, 32, 64],
+        'batch_size': [16, 32, 64],
         'optimizer': ['rmsprop', 'adam', 'SGD'],
     }
 
