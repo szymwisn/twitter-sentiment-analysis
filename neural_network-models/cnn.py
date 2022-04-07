@@ -10,28 +10,27 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, GlobalMaxPooling1D, Conv1D, BatchNormalization, Dropout
-
-
+from tensorflow.keras import regularizers 
 
 
 def create_model(optimizer='adam', loss='categorical_crossentropy'):
     # cnn
     embed_dim = 128
-    f_conv_size = 1024
-    f_dense_size = 2048
+    f_conv_size = 256
+    f_dense_size = 16
     out_dim = 3
 
     model = Sequential()
     model.add(Embedding(max_fatures, embed_dim, input_length = X.shape[1]))
-    model.add(Conv1D(f_conv_size, 3, padding='valid', activation='relu', strides=1))
+    model.add(Conv1D(f_conv_size, kernel_size=3, padding='valid', activation='relu', strides=1))
     model.add(GlobalMaxPooling1D())
     model.add(Dropout(0.5))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
-    model.add(Dense(f_dense_size, activation='relu'))
+    model.add(Dense(f_dense_size, kernel_regularizer=regularizers.l2(0.01), activation='tanh'))
     model.add(Dropout(0.5))
     model.add(BatchNormalization())
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.2))
     model.add(Dense(out_dim, activation='softmax'))
     model.compile(loss = loss, optimizer=optimizer, metrics = ['accuracy'])
     model.summary()
@@ -76,13 +75,13 @@ X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random
 print(X_train.shape,Y_train.shape)
 print(X_test.shape,Y_test.shape)
 
-find_cnn_model_params(X_train, X_test, Y_train, Y_test)
+#find_cnn_model_params(X_train, X_test, Y_train, Y_test)
 
 
 
 
-epochs_nb = 10
-batch_size = 32
+epochs_nb = 20
+batch_size = 64
 model = create_model()
 
 history = model.fit(X_train, Y_train, validation_data=(X_test, Y_test), batch_size=batch_size,

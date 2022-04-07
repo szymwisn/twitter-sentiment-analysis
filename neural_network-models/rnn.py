@@ -7,24 +7,25 @@ from sklearn.feature_extraction.text import CountVectorizer
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential
-from keras.layers import Dense, Embedding, LSTM, Dropout
+from keras.layers import Dense, Embedding, LSTM, Dropout, BatchNormalization
 from keras.wrappers.scikit_learn import KerasClassifier
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras import regularizers 
 
 
 
 
-def create_model(optimizer='adam', loss='categorical_crossentropy'):
+def create_model(optimizer='rmsprop', loss='categorical_crossentropy'):
     embed_dim = 128
     f_lstm_size = 196
-    f_dense_size = 128
+    f_dense_size = 256
     out_dim = 3
 
     # rnn 
     model = Sequential()
     model.add(Embedding(max_fatures, embed_dim, input_length = (83)))
-    model.add(LSTM(f_lstm_size, dropout=0.3, activation='relu'))
-    model.add(Dense(f_dense_size, activation='tanh'))
+    model.add(LSTM(f_lstm_size, dropout=0.3, recurrent_dropout=0.3, activation='relu'))
+    model.add(Dense(f_dense_size, kernel_regularizer=regularizers.l2(0.01), activation='tanh'))
     model.add(Dropout(0.5))
     model.add(Dense(out_dim, activation='softmax'))
     model.compile(loss=loss, optimizer=optimizer, metrics = ['accuracy'])
@@ -72,13 +73,13 @@ X_train, X_test, Y_train, Y_test = train_test_split(X,y, test_size = 0.2, random
 print(X_train.shape,Y_train.shape)
 print(X_test.shape,Y_test.shape)
 
-find_rnn_model_params(X_train, X_test, Y_train, Y_test)
+#find_rnn_model_params(X_train, X_test, Y_train, Y_test)
 
 
 
 
 
-epochs = 10
+epochs = 5
 batch_size = 32
 model = create_model()
 
