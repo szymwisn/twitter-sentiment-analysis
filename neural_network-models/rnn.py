@@ -63,8 +63,8 @@ y = np.load('../data-analysis/data/y_rnn.npy', allow_pickle=True)
 y = pd.get_dummies(y) # positive -> [1 0 0], neutral ->[0 1 0] negative -> [0 0 1]
 
 
-max_fatures = 2000
-tokenizer = Tokenizer(num_words=max_fatures, split=' ')
+max_features = 2000
+tokenizer = Tokenizer(num_words=max_features, split=' ')
 tokenizer.fit_on_texts(X)
 X = tokenizer.texts_to_sequences(X)
 X = pad_sequences(X)
